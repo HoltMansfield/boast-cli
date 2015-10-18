@@ -32,25 +32,44 @@ var runTests = function(expressApp) {
   describe('{{ collectionNamePlural }}-api', function() {
     var {{ collectionNamePlural }};
     var jwt;
+    var testDataIndex = 0;
+    var lastUpdatedPropertyValue = null;
 
     beforeEach(function (done) {
       testSetup.clearDb(mongoose, done);
       {{ collectionNamePlural }} = [];
+      testDataIndex = 0;
+      lastUpdatedPropertyValue = null;
     });
+
+    var createTestDocument = function() {
+      var testDocument = {
+        requriedField: 'testValue' +testDataIndex
+      };
+
+      testDataIndex++;
+
+      return testDocument;
+    };
+
+    var updateTestDocument = function(testDocument) {
+      testDocument.requiredField = 'testValue' +testDataIndex;
+      lastUpdatedPropertyValue = testDocument.requidField;
+
+      testDataIndex++;
+
+      return testDocument;
+    }
 
     var createTestData = function(done) {
       // create a entity
-      {{ collectionNamePlural }}Api.post({
-        url: 'url1'
-      })
+      {{ collectionNamePlural }}Api.post(createTestDocument())
       .then(function(new{{ collectionNameCamelCase }}) {
         // capture data for asserts later
         {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
 
         // create second entity
-        {{ collectionNamePlural }}Api.post({
-          url: 'url2',
-        })
+        {{ collectionNamePlural }}Api.post(createTestDocument())
           .then(function(new{{ collectionNameCamelCase }}) {
             // capture new entity for asserts later
             {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
@@ -145,7 +164,7 @@ var runTests = function(expressApp) {
           var new{{ collectionNameCamelCase }} = res.body;
 
           if (!err) {
-            {{ collectionNamePlural }}Api.get(new{{ collectionNamePlural }}._id)
+            {{ collectionNamePlural }}Api.get(new{{ collectionNameCamelCase }}._id)
               .then(function({{ collectionName }}) {
                 expect({{ collectionName }}).to.be.defined;
                 done();
@@ -158,7 +177,7 @@ var runTests = function(expressApp) {
     });
 
     it('should PUT a {{ collectionName }}', function(done) {
-      {{ collectionNamePlural }}[0].url = '7';
+      updateTestDocument({{ collectionNamePlural }}[0]);
 
       request(expressApp)
         .put('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
@@ -168,9 +187,9 @@ var runTests = function(expressApp) {
         .expect(200)
         .end(function(err, res){
           if (!err) {
-            {{ collectionNamePlural }}sApi.get({{ collectionNamePlural }}[0].id)
+            {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
               .then(function({{ collectionName }}) {
-                expect({{ collectionName }}.url).to.equal('7');
+                expect({{ collectionName }}.url).to.equal(lastUpdatedPropertyValue);
                 done();
               });
           } else {
