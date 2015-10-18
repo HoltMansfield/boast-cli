@@ -3,18 +3,22 @@ var Hogan = require('hogan.js');
 var fs = require('fs');
 var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
+
 var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
+var templatePath = 'app/templates/' +boastConfig.language +'/';
 
 
 var createApiRoutesTests = function(args) {
-  return templateLoader.loadTemplate('app/templates/api-routes-tests.tmpl')
+  return templateLoader.loadTemplate(templatePath +'api-routes-tests.tmpl')
     .then(function(templateContent) {
       var template = Hogan.compile(templateContent);
       var output = template.render(args);
-      //console.log(output);
+      var filePath = process.env.BOAST_PROJECT_PATH
+                     +boastConfig.api.paths.routesTestsPath
+                     +args.collectionNamePlural +'-routes-tests.js';
 
       return {
-        filePath: process.env.BOAST_PROJECT_PATH +boastConfig.routesTestsPath +args.collectionNamePlural +'-routes-tests.js',
+        filePath: filePath,
         fileContent: output
       };
     })
@@ -24,14 +28,16 @@ var createApiRoutesTests = function(args) {
 };
 
 var createApiModule = function(args) {
-  return templateLoader.loadTemplate('app/templates/api-module.tmpl')
+  return templateLoader.loadTemplate(templatePath +'api-module.tmpl')
     .then(function(templateContent) {
       var template = Hogan.compile(templateContent);
       var output = template.render(args);
-      //console.log(output);
+      var filePath = process.env.BOAST_PROJECT_PATH
+                    +boastConfig.api.paths.apiModulesPath
+                    +args.collectionNamePlural +'-api.js';
 
       return {
-        filePath: process.env.BOAST_PROJECT_PATH +boastConfig.apiModulesPath +args.collectionNamePlural +'-api.js',
+        filePath: filePath,
         fileContent: output
       };
     })
@@ -41,14 +47,16 @@ var createApiModule = function(args) {
 };
 
 var createRoutes = function(args) {
-  return templateLoader.loadTemplate('app/templates/api-routes.tmpl')
+  return templateLoader.loadTemplate(templatePath +'api-routes.tmpl')
     .then(function(templateContent) {
       var template = Hogan.compile(templateContent);
       var output = template.render(args);
-      //console.log(output);
+      var filePath = process.env.BOAST_PROJECT_PATH
+                    +boastConfig.api.paths.routesPath
+                    +args.collectionNamePlural +'-routes.js';
 
       return {
-        filePath: process.env.BOAST_PROJECT_PATH +boastConfig.routesPath +args.collectionNamePlural +'-routes.js',
+        filePath: filePath,
         fileContent: output
       };
     })
