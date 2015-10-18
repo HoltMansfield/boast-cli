@@ -1,0 +1,184 @@
+var testSetup = require(process.env.PWD + '/tests/test-setup');
+
+// create node environment & instance of expressApp
+var nodeAppPath = testSetup.prepareNodeEnvironment();
+
+var assert = require('assert');
+var request = require('supertest');
+var mongoose = require('mongoose');
+var Promise = require('bluebird');
+var rek = require('rekuire');
+var appMaker = require(nodeAppPath +'/app/app.js');
+var chai = require('chai')
+var expect = chai.expect;
+
+// used for seed data
+var {{ collectionNamePlural }}Api = rek('{{ collectionNamePlural }}-api');
+
+// used for getting a JWT for hitting secured API calls
+var usersApi = rek('users-api');
+
+describe('Express App', function() {
+  it('should load without errors', function(done) {
+    appMaker.initialize()
+      .then(function(expressApp) {
+        done();
+        runTests(expressApp);
+      });
+  });
+});
+
+var runTests = function(expressApp) {
+  describe('{{ collectionNamePlural }}-api', function() {
+    var {{ collectionNamePlural }};
+    var jwt;
+
+    beforeEach(function (done) {
+      testSetup.clearDb(mongoose, done);
+      {{ collectionNamePlural }} = [];
+    });
+
+    var createTestData = function(done) {
+      // create a entity
+      {{ collectionNamePlural }}Api.post({
+        url: 'url1'
+      })
+      .then(function(new{{ collectionNameCamelCase }}) {
+        // capture data for asserts later
+        {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
+
+        // create second entity
+        {{ collectionNamePlural }}Api.post({
+          url: 'url2',
+        })
+          .then(function(new{{ collectionNameCamelCase }}) {
+            // capture new entity for asserts later
+            {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
+            done();
+          });
+      });
+    }
+
+    beforeEach(function(done) {
+      // for all tests create a user to get a token
+      usersApi.post({ email: 'h@h.com' , fullName: 'mama', password: '1234' })
+        .then(function(newUserResponse) {
+          jwt = newUserResponse.token;
+
+          createTestData(done);
+        });
+    });
+
+    afterEach(function (done) {
+      testSetup.disconnect(mongoose, done);
+    });
+
+    it('should GET all {{ collectionNamePlural }}', function(done) {
+      request(expressApp)
+        .get('/api/{{ collectionNamePlural }}')
+        .set('Authorization', 'Bearer ' +jwt)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          var {{ collectionName }}FromServer = res.body;
+
+          expect({{ collectionName }}FromServer[0]._id).to.equal({{ collectionNamePlural }}[0].id);
+          expect({{ collectionName }}FromServer[1]._id).to.equal({{ collectionNamePlural }}[1].id);
+
+          if (err) {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+          done();
+        });
+    });
+
+    it('should GET a {{ collectionName }} by id', function(done) {
+      request(expressApp)
+        .get('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
+        .set('Authorization', 'Bearer ' +jwt)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          var {{ collectionName }}FromServer = res.body;
+
+          expect({{ collectionName }}FromServer._id).to.equal({{ collectionNamePlural }}[0].id);
+
+          if (err) {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+          done();
+        });
+    });
+
+    it('should DELETE a {{ collectionName }} by _id', function(done) {
+      request(expressApp)
+        .delete('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
+        .set('Authorization', 'Bearer ' +jwt)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          if (!err) {
+            {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
+              .then(function({{ collectionName }}) {
+                expect({{ collectionName }}).to.be.null;
+                done();
+              });
+          } else {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+        });
+    });
+
+    it('should POST a {{ collectionName }}', function(done) {
+      request(expressApp)
+        .post('/api/{{ collectionNamePlural }}')
+        .set('Authorization', 'Bearer ' +jwt)
+        .send({
+          url: 'url3'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          var new{{ collectionNameCamelCase }} = res.body;
+
+          if (!err) {
+            {{ collectionNamePlural }}Api.get(new{{ collectionNamePlural }}._id)
+              .then(function({{ collectionName }}) {
+                expect({{ collectionName }}).to.be.defined;
+                done();
+              });
+          } else {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+        });
+    });
+
+    it('should PUT a {{ collectionName }}', function(done) {
+      {{ collectionNamePlural }}[0].url = '7';
+
+      request(expressApp)
+        .put('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
+        .set('Authorization', 'Bearer ' +jwt)
+        .send({{ collectionNamePlural }}[0])
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          if (!err) {
+            {{ collectionNamePlural }}sApi.get({{ collectionNamePlural }}[0].id)
+              .then(function({{ collectionName }}) {
+                expect({{ collectionName }}.url).to.equal('7');
+                done();
+              });
+          } else {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+        });
+    });
+
+  });
+};

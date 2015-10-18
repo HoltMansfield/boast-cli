@@ -1,0 +1,9 @@
+{
+  "api": {
+    "paths": {
+      "routesPath": "server/routes/auto-loaded/",
+      "routesTestsPath": "tests/api/",
+      "apiModulesPath": "server/data/api/"
+    }
+  }
+}

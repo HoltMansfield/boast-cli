@@ -1,0 +1,59 @@
+var brandsApi = rek('{{ collectionNamePlural }}-api');
+
+
+var addRoutes = function(app) {
+
+  app.router.get('/api/{{ collectionNamePlural }}/', function(req, res, next) {
+    brandsApi.getAll()
+    .then(function(data) {
+      res.json(data);
+    })
+    .catch(function(err) {
+      return next(err);
+    });
+  });
+
+  app.router.get('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
+    brandsApi.get(req.params.id)
+    .then(function(data) {
+      res.json(data);
+    })
+    .catch(function(err) {
+      return next(err);
+    });
+  });
+
+  app.router.put('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
+    brandsApi.put(req.params.id, req.body)
+      .then(function(data) {
+        res.json(data);
+      })
+      .catch(function(err) {
+        return next(err);
+      });
+  });
+
+  app.router.post('/api/{{ collectionNamePlural }}/', function(req, res, next) {
+    brandsApi.post(req.body)
+      .then(function(data) {
+        res.json(data);
+      })
+      .catch(function(err) {
+        return next(err);
+      });
+  });
+
+  app.router.delete('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
+    brandsApi.delete(req.params.id, req.body)
+      .then(function(data) {
+        res.json(data);
+      })
+      .catch(function(err) {
+        return next(err);
+      });
+  });
+
+  return app;
+};
+
+module.exports = addRoutes;

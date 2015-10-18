@@ -1,0 +1,57 @@
+var mongoose = require('mongoose');
+var Promise = require("bluebird");
+var R = require('ramda');
+var async = require('async');
+var db = require('../mongo-manager');
+
+
+var getAll = function(id) {
+  return db.models.{{ collectionNamePlural }}
+           .find({ })
+           .then(function({{ collectionNamePlural }}) {
+             return {{ collectionNamePlural }};
+           });
+};
+
+var get = function(id) {
+  return db.models.{{ collectionNamePlural }}
+           .findOne({ _id: id })
+           .then(function({{ collectionName }}) {
+             return {{ collectionName }};
+           });
+};
+
+var put = function(id, {{ collectionName }}) {
+  var upsertData = R.clone({{ collectionName }});
+  delete upsertData._id;
+
+  return db.models.{{ collectionNamePlural }}
+           .updateAsync({_id: id}, upsertData, {upsert: true})
+           .then(function({{ collectionName }}) {
+             return 'success';
+           });
+};
+
+var post = function({{ collectionName }}) {
+  var {{ collectionName }}Model = new db.models.{{ collectionNamePlural }}({{ collectionName }});
+
+  return {{ collectionName }}Model.saveAsync()
+    // We need to use `spread` because `model.save` yields an array
+    .spread(function(new{{ collectionNameCamelCase }}) {
+      return new{{ collectionNameCamelCase }};
+    });
+};
+
+var d = function(id, user) {
+  return db.models.{{ collectionNamePlural }}
+           .findOne({ _id: id })
+           .then(function({{ collectionName }}) {
+             return {{ collectionName }}.remove();
+           });
+};
+
+module.exports.getAll = getAll;
+module.exports.get = get;
+module.exports.put = put;
+module.exports.post = post;
+module.exports.delete = d;
