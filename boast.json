@@ -6,5 +6,13 @@
       "routesTestsPath": "tests/api/",
       "apiModulesPath": "server/data/api/"
     }
+  },
+  "angular": {
+    "paths": {
+        "dataServices": "www/js/core/data/"
+      },
+      "modules": {
+        "dataServices": "pio.core.data"
+      }
   }
 }

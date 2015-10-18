@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
 
 var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
-var templatePath = 'app/templates/' +boastConfig.language +'/';
+var templatePath = 'app/templates/server/' +boastConfig.language +'/';
 
 
 var createApiRoutesTests = function(args) {
