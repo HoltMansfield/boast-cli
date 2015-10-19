@@ -16,7 +16,7 @@ var createDataService = function(args) {
       var template = Hogan.compile(templateContent);
       var output = template.render(args);
       var filePath = process.env.BOAST_PROJECT_PATH
-                    +boastConfig.angular.paths1.dataServices
+                    +boastConfig.angular.paths.dataServices
                     +args.collectionNamePlural +'-data-service.js';
 
       return {

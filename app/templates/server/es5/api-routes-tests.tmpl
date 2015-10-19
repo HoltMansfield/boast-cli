@@ -155,9 +155,7 @@ var runTests = function(expressApp) {
       request(expressApp)
         .post('/api/{{ collectionNamePlural }}')
         .set('Authorization', 'Bearer ' +jwt)
-        .send({
-          url: 'url3'
-        })
+        .send(createTestDocument())
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res){
@@ -189,7 +187,7 @@ var runTests = function(expressApp) {
           if (!err) {
             {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
               .then(function({{ collectionName }}) {
-                expect({{ collectionName }}.url).to.equal(lastUpdatedPropertyValue);
+                expect({{ collectionName }}.'require').to.equal(lastUpdatedPropertyValue);
                 done();
               });
           } else {
