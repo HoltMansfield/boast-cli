@@ -1,6 +1,6 @@
 {
-  "language": "es5",
   "api": {
+    "language": "es5",
     "paths": {
       "routesPath": "server/routes/auto-loaded/api/",
       "routesTestsPath": "tests/api/",
@@ -8,6 +8,7 @@
     }
   },
   "angular": {
+    "language": "es5",
     "paths": {
         "dataServices": "www/js/core/data/"
       },

@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
 
 var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
-var templatePath = 'app/templates/client/' +boastConfig.language +'/services/'  +'/';
+var templatePath = 'app/templates/client/' +boastConfig.angular.language +'/services/'  +'/';
 
 // console.log('boastConfig::::::::');
 // console.log(JSON.stringify(boastConfig));
@@ -66,6 +66,9 @@ module.exports = function(args, callback) {
   // enhance basic arguments
   args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
   args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
+
+  // read in arguments into config
+  if(args.options.language) boastConfig.language = args.options.language;
 
   // enhance from config
   args.moduleName = boastConfig.angular.modules.dataServices;

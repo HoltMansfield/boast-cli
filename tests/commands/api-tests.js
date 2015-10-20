@@ -9,9 +9,11 @@ describe('api command',function() {
   it('should generate three files', function(done) {
     var arguments =
     {
-      "options": {},
-      "collectionName": "user",
-      "collectionNamePlural": "users"
+      "options": {
+        "language": "es7"
+      },
+      "collectionName": "mama",
+      "collectionNamePlural": "mamas"
     };
 
     apiCommand(arguments, done);

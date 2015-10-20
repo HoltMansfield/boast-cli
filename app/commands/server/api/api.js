@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
 
 var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
-var templatePath = 'app/templates/server/' +boastConfig.language +'/';
+var templatePath = 'app/templates/server/' +boastConfig.api.language +'/';
 
 
 var createApiRoutesTests = function(args) {
@@ -100,6 +100,9 @@ module.exports = function(args, callback) {
   // enhance basic arguments
   args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
   args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
+
+  // read in arguments into config
+  if(args.options.language) boastConfig.language = args.options.language;
 
   promises.push(createRoutes(args));
   promises.push(createApiModule(args));
