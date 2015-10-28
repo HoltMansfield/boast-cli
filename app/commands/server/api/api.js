@@ -3,10 +3,11 @@ var Hogan = require('hogan.js');
 var fs = require('fs');
 var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
+var mongooseLoader = rek('boast-load-mongoose-model');
 
-var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
-var templatePath = 'app/templates/server/' +boastConfig.api.language +'/';
-
+// we don't initialize these vars until the commman is actually called
+var boastConfig;
+var templatePath;
 
 var createApiRoutesTests = function(args) {
   return templateLoader.loadTemplate(templatePath +'api-routes-tests.tmpl')
@@ -93,16 +94,13 @@ var writeFiles = function(boastFileOutputs) {
   return Promise.all(writeFilePromises);
 };
 
-module.exports = function(args, callback) {
-  //console.log(JSON.stringify(args, null, 2));
+var initialize = function() {
+  boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
+  templatePath = 'app/templates/server/' +boastConfig.api.language +'/';
+};
+
+var runCommand = function(args, callback) {
   var promises = [];
-
-  // enhance basic arguments
-  args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
-  args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
-
-  // read in arguments into config
-  if(args.options.language) boastConfig.language = args.options.language;
 
   promises.push(createRoutes(args));
   promises.push(createApiModule(args));
@@ -116,4 +114,23 @@ module.exports = function(args, callback) {
       console.log('__________________________________________________________________________');
     })
     .finally(callback);
+};
+
+module.exports = function(args, callback) {
+  initialize();
+  // fetch the mongoose model
+  mongooseLoader.readModel(boastConfig.mongoose.modelsPath, args.collectionNamePlural)
+    .then(function(model) {
+      console.log(model);
+
+      // enhance basic arguments
+      args.model = model;
+      args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
+      args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
+
+      // read in arguments into config
+      if(args.options.language) boastConfig.language = args.options.language;
+
+      return runCommand(args, callback);
+    });
 };

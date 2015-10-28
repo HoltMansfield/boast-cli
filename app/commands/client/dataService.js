@@ -4,8 +4,9 @@ var fs = require('fs');
 var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
 
-var boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
-var templatePath = 'app/templates/client/' +boastConfig.angular.language +'/services/'  +'/';
+// we don't initialize these vars until the commman is actually called
+var boastConfig;
+var templatePath;
 
 // console.log('boastConfig::::::::');
 // console.log(JSON.stringify(boastConfig));
@@ -59,7 +60,13 @@ var writeFiles = function(boastFileOutputs) {
   return Promise.all(writeFilePromises);
 };
 
+var initialize = function() {
+  boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
+  templatePath = 'app/templates/client/' +boastConfig.angular.language +'/services/'  +'/';
+};
+
 module.exports = function(args, callback) {
+  initialize();
   //console.log(JSON.stringify(args, null, 2));
   var promises = [];
 

@@ -7,7 +7,7 @@ process.env.BOAST_PROJECT_PATH = process.env.PWD +'/';
 var apiCommand = require('./app/commands/server/api/api.js');
 
 vorpal
-  .command('api [collectionName] [collectionNamePlural]', 'Creates API routes, module, tests for Mongoose Schema')
+  .command('api [collectionName] [collectionNamePlural] [testField]', 'Creates API routes, module, tests for Mongoose Schema')
   .option('-l, --language [language]', 'Sets language used for creating code. [es5, es6, esNext]')
   .action(apiCommand);
 

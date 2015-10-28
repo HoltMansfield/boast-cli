@@ -44,7 +44,7 @@ var runTests = function(expressApp) {
 
     var createTestDocument = function() {
       var testDocument = {
-        requriedField: 'testValue' +testDataIndex
+        {{ testField }}: '{{ testField }}' +testDataIndex
       };
 
       testDataIndex++;
@@ -53,8 +53,8 @@ var runTests = function(expressApp) {
     };
 
     var updateTestDocument = function(testDocument) {
-      testDocument.requiredField = 'testValue' +testDataIndex;
-      lastUpdatedPropertyValue = testDocument.requidField;
+      testDocument.{{ testField }} = '{{ testField }}' +testDataIndex;
+      lastUpdatedPropertyValue = testDocument.{{ testField }};
 
       testDataIndex++;
 
@@ -90,26 +90,6 @@ var runTests = function(expressApp) {
 
     afterEach(function (done) {
       testSetup.disconnect(mongoose, done);
-    });
-
-    it('should GET all {{ collectionNamePlural }}', function(done) {
-      request(expressApp)
-        .get('/api/{{ collectionNamePlural }}')
-        .set('Authorization', 'Bearer ' +jwt)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end(function(err, res){
-          var {{ collectionName }}FromServer = res.body;
-
-          expect({{ collectionName }}FromServer[0]._id).to.equal({{ collectionNamePlural }}[0].id);
-          expect({{ collectionName }}FromServer[1]._id).to.equal({{ collectionNamePlural }}[1].id);
-
-          if (err) {
-            console.log(JSON.stringify(err));
-            throw err;
-          }
-          done();
-        });
     });
 
     it('should GET a {{ collectionName }} by id', function(done) {
@@ -187,13 +167,35 @@ var runTests = function(expressApp) {
           if (!err) {
             {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
               .then(function({{ collectionName }}) {
-                expect({{ collectionName }}.'require').to.equal(lastUpdatedPropertyValue);
+                expect({{ collectionName }}.{{ testField }}).to.equal(lastUpdatedPropertyValue);
                 done();
               });
           } else {
             console.log(JSON.stringify(err));
             throw err;
           }
+        });
+    });
+
+    it('should fetch  a {{ collectionName }} using a mongo query', function(done) {
+      request(expressApp)
+        .post('/api/{{ collectionNamePlural }}/query')
+        .set('Authorization', 'Bearer ' +jwt)
+        .send({
+          {{ testField }}: {{ collectionNamePlural }}[0].{{ testField }}
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res){
+          var {{ collectionName }}FromServer = res.body[0];
+
+          expect({{ collectionName }}FromServer._id).to.equal({{ collectionNamePlural }}[0].id);
+
+          if (err) {
+            console.log(JSON.stringify(err));
+            throw err;
+          }
+          done();
         });
     });
 

@@ -3,16 +3,6 @@ var brandsApi = rek('{{ collectionNamePlural }}-api');
 
 var addRoutes = function(app) {
 
-  app.router.get('/api/{{ collectionNamePlural }}/', function(req, res, next) {
-    brandsApi.getAll()
-    .then(function(data) {
-      res.json(data);
-    })
-    .catch(function(err) {
-      return next(err);
-    });
-  });
-
   app.router.get('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
     brandsApi.get(req.params.id)
     .then(function(data) {
@@ -35,6 +25,16 @@ var addRoutes = function(app) {
 
   app.router.post('/api/{{ collectionNamePlural }}/', function(req, res, next) {
     brandsApi.post(req.body)
+      .then(function(data) {
+        res.json(data);
+      })
+      .catch(function(err) {
+        return next(err);
+      });
+  });
+
+  app.router.post('/api/{{ collectionNamePlural }}/query', function(req, res, next) {
+    brandsApi.query(req.body)
       .then(function(data) {
         res.json(data);
       })

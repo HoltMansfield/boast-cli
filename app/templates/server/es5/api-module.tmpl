@@ -5,14 +5,6 @@ var async = require('async');
 var db = require('../mongo-manager');
 
 
-var getAll = function(id) {
-  return db.models.{{ collectionNamePlural }}
-           .find({ })
-           .then(function({{ collectionNamePlural }}) {
-             return {{ collectionNamePlural }};
-           });
-};
-
 var get = function(id) {
   return db.models.{{ collectionNamePlural }}
            .findOne({ _id: id })
@@ -42,6 +34,14 @@ var post = function({{ collectionName }}) {
     });
 };
 
+var query = function(query) {
+  return db.models.{{ collectionNamePlural }}
+           .find(query)
+           .then(function({{ collectionName }}) {
+             return {{ collectionName }};
+           });
+};
+
 var d = function(id, user) {
   return db.models.{{ collectionNamePlural }}
            .findOne({ _id: id })
@@ -50,8 +50,8 @@ var d = function(id, user) {
            });
 };
 
-module.exports.getAll = getAll;
 module.exports.get = get;
 module.exports.put = put;
 module.exports.post = post;
+module.exports.query = query;
 module.exports.delete = d;
