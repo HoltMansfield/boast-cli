@@ -28,7 +28,7 @@ var doubleQuoteMongoTypes = function(string) {
    return string;
 };
 
-var stripLines = function(resolve, reject, data) {
+var stripLines = function(data) {
   // if windows
   // var cleanData = data.replace(/\r/,'');
   // var lines = data.split('\r');
@@ -51,8 +51,24 @@ var stripLines = function(resolve, reject, data) {
   // convert string to JSON
   var jsonModel = eval('(' + string + ')');
 
-  resolve(jsonModel);
+  return jsonModel;
 }
+
+var addRequiredFields = function(schema) {
+  var requiredFields = [];
+  var requiredFieldNames = [];
+
+    // for each over the mongooseModel
+    for(fieldName in schema) {
+      if(schema[fieldName].required) {
+        requiredFields.push(schema[fieldName]);
+        requiredFieldNames.push(fieldName);
+      }
+    }
+
+    schema.requiredFields = requiredFields;
+    schema.requiredFieldNames = requiredFieldNames;
+};
 
 var readModel = function(resolve, reject, path, model) {
   var fullpath = path + model +'.js';
@@ -62,11 +78,14 @@ var readModel = function(resolve, reject, path, model) {
         reject(err);
     }
 
-    stripLines(resolve, reject, data);
+    var model = stripLines(data);
+    addRequiredFields(model);
+
+    resolve(model);
   });
 };
 
-module.exports.readModel = function(path, model) {
+module.exports.readSchema = function(path, model) {
   return new Promise(function(resolve, reject) {
     readModel(resolve, reject, path, model);
   });

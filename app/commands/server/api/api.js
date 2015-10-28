@@ -3,7 +3,7 @@ var Hogan = require('hogan.js');
 var fs = require('fs');
 var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
-var mongooseLoader = rek('boast-load-mongoose-model');
+var mongooseLoader = rek('boast-load-mongoose-schema');
 
 // we don't initialize these vars until the commman is actually called
 var boastConfig;
@@ -119,7 +119,7 @@ var runCommand = function(args, callback) {
 module.exports = function(args, callback) {
   initialize();
   // fetch the mongoose model
-  mongooseLoader.readModel(boastConfig.mongoose.modelsPath, args.collectionNamePlural)
+  mongooseLoader.readSchema(boastConfig.mongoose.modelsPath, args.collectionNamePlural)
     .then(function(model) {
       console.log(model);
 
