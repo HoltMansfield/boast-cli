@@ -12,8 +12,8 @@ describe('api command',function() {
       "options": {
         "language": "es7"
       },
-      "collectionName": "mama",
-      "collectionNamePlural": "mamas"
+      "collectionName": "widget",
+      "collectionNamePlural": "widgets"
     };
 
     apiCommand(arguments, done);

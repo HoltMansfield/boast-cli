@@ -120,13 +120,18 @@ module.exports = function(args, callback) {
   initialize();
   // fetch the mongoose model
   mongooseLoader.readSchema(boastConfig.mongoose.modelsPath, args.collectionNamePlural)
-    .then(function(model) {
-      console.log(model);
+    .then(function(schema) {
+      // console.log(schema);
 
       // enhance basic arguments
-      args.model = model;
+      args.schema = schema;
       args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
       args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
+
+      if(!args.testField) {
+        // if this value is not supplied at the command line, infer it from mongoose schema
+        args.testField = args.schema.testField;
+      }
 
       // read in arguments into config
       if(args.options.language) boastConfig.language = args.options.language;

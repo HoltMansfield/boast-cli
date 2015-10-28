@@ -57,36 +57,58 @@ var stripLines = function(data) {
 var addRequiredFields = function(schema) {
   var requiredFields = [];
   var requiredFieldNames = [];
+  var testField;
 
-    // for each over the mongooseModel
-    for(fieldName in schema) {
-      if(schema[fieldName].required) {
-        requiredFields.push(schema[fieldName]);
-        requiredFieldNames.push(fieldName);
-      }
+  for(fieldName in schema) {
+    // grab the first field as the testField name
+    if(!testField) testField = fieldName;
+
+    if(schema[fieldName].required) {
+      requiredFields.push(schema[fieldName]);
+      requiredFieldNames.push(fieldName);
     }
+  }
 
-    schema.requiredFields = requiredFields;
-    schema.requiredFieldNames = requiredFieldNames;
+  schema.requiredFields = requiredFields;
+  schema.requiredFieldNames = requiredFieldNames;
+  schema.testField = testField;
 };
 
-var readModel = function(resolve, reject, path, model) {
-  var fullpath = path + model +'.js';
+var addTestField = function(schema) {
+  var testField;
+
+  if(schema.requiredFieldNames) {
+    testField = schema.requiredFieldNames[0];
+  }
+
+  if(!testField) {
+    for(fieldName in schema) {
+      // grab the first field as the testField name
+      if(!testField) testField = fieldName;
+    }
+  }
+
+  schema.testField = testField;
+};
+
+var readSchema = function(resolve, reject, path, modelName) {
+  var fullpath = path + modelName +'.js';
 
   fs.readFile(fullpath, 'utf8', function (err,data) {
     if (err) {
         reject(err);
     }
 
-    var model = stripLines(data);
-    addRequiredFields(model);
+    var schema = stripLines(data);
+    addRequiredFields(schema);
+    addTestField(schema);
 
-    resolve(model);
+    resolve(schema);
   });
 };
 
-module.exports.readSchema = function(path, model) {
+module.exports.readSchema = function(path, modelName) {
   return new Promise(function(resolve, reject) {
-    readModel(resolve, reject, path, model);
+    readSchema(resolve, reject, path, modelName);
   });
 };
