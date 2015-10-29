@@ -4,6 +4,7 @@ var fs = require('fs');
 var Promise = require('bluebird');
 var templateLoader = rek('boast-load-template');
 var mongooseLoader = rek('boast-load-mongoose-schema');
+var utf8 = require('utf8');
 
 // we don't initialize these vars until the commman is actually called
 var boastConfig;
@@ -75,7 +76,7 @@ var capitalizeFirstLetter = function(string) {
 };
 
 var writeFile = function(boastFileOutput) {
-  fs.writeFile(boastFileOutput.filePath, boastFileOutput.fileContent, function(err) {
+  fs.writeFile(boastFileOutput.filePath, new Buffer(boastFileOutput.fileContent, 'utf8'), function(err) {
       if(err) {
           return console.log(err);
       }
@@ -97,6 +98,42 @@ var writeFiles = function(boastFileOutputs) {
 var initialize = function() {
   boastConfig = JSON.parse(fs.readFileSync('./boast.json', 'utf8'));
   templatePath = 'app/templates/server/' +boastConfig.api.language +'/';
+};
+
+var addTestDocumentAssignments = function(schema) {
+  var testDocumentAssignments = [];
+
+  for(field in schema) {
+    var typeValue = schema[field].type;
+
+    switch(typeValue) {
+       case 'String':
+        var assignment = 'testDocument.' +field +' = ' +'\'' +field +'_\'' +'+testDataIndex' +';\n';
+        testDocumentAssignments.push(assignment);
+        break;
+      case 'Date':
+        var assignment = 'testDocument.' +field +' = ' +'new Date()' +';\n';
+        testDocumentAssignments.push(assignment);
+        break;
+      case 'Number':
+        var assignment = 'testDocument.' +field +' = ' +'testDataIndex;\n';
+        testDocumentAssignments.push(assignment);
+        break;
+      case 'Boolean':
+        var assignment = 'testDocument.' +field +' = ' +'true,\n';
+        testDocumentAssignments.push(assignment);
+        break;
+    }
+  }
+
+  // map the array back to a string
+  testDocumentAssignments = testDocumentAssignments.join('');
+
+  // update schema
+  schema.testDocumentAssignments = testDocumentAssignments;
+
+  // return so we can add it to vorpal args
+  return testDocumentAssignments;
 };
 
 var runCommand = function(args, callback) {
@@ -125,6 +162,7 @@ module.exports = function(args, callback) {
 
       // enhance basic arguments
       args.schema = schema;
+      args.testDocumentAssignments = addTestDocumentAssignments(schema);
       args.collectionNameCamelCase = capitalizeFirstLetter(args.collectionName);
       args.collectionNamePluralCamelCase = capitalizeFirstLetter(args.collectionNamePlural);
 

@@ -43,9 +43,11 @@ var runTests = function(expressApp) {
     });
 
     var createTestDocument = function() {
-      var testDocument = {
-        {{ testField }}: '{{ testField }}' +testDataIndex
-      };
+      var testDocument = {};
+
+{{{ testDocumentAssignments }}}
+
+      lastUpdatedPropertyValue = testDocument.{{ testField }};
 
       testDataIndex++;
 
@@ -53,7 +55,8 @@ var runTests = function(expressApp) {
     };
 
     var updateTestDocument = function(testDocument) {
-      testDocument.{{ testField }} = '{{ testField }}' +testDataIndex;
+{{{ testDocumentAssignments }}}
+
       lastUpdatedPropertyValue = testDocument.{{ testField }};
 
       testDataIndex++;
