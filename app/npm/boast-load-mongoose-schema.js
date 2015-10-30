@@ -29,6 +29,14 @@ var doubleQuoteMongoTypes = function(string) {
    return string;
 };
 
+var mapObjectReferences = function(string) {
+  string = string.replace(/\[mongooseSchema.ObjectId\]/, '"ObjectIdArray"');  
+  string = string.replace(/mongooseSchema.ObjectId/, '"ObjectId"');
+
+
+  return string;
+}
+
 var stripLines = function(data) {
   // if windows
   // var cleanData = data.replace(/\r/,'');
@@ -40,7 +48,11 @@ var stripLines = function(data) {
   var json = ['{'];
 
   for(var i = 4; i < lines.length -2; i++) {
-      json.push(lines[i]);
+      var comments = '//';
+
+      if(lines[i].indexOf(comments) === -1) {
+        json.push(lines[i]);
+      }
   }
 
   // convert arry to a string
@@ -48,6 +60,8 @@ var stripLines = function(data) {
 
   // wrap mongo types in qoutes because eval does funky things
   string = doubleQuoteMongoTypes(string);
+
+  string = mapObjectReferences(string);
 
   // convert string to JSON
   var jsonModel = eval('(' + string + ')');
