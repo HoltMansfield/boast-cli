@@ -23,14 +23,14 @@ var Promise = require('bluebird');
 var doubleQuoteMongoTypes = function(string) {
   string = string.replace(/String/,'"String"');
   string = string.replace(/Number/,'"Number"');
-  string = string.replace(/Date/,'"Date"');
+  string = string.replace(/^Date$/,'"Date"');
   string = string.replace(/Boolean/,'"Boolean"');
 
    return string;
 };
 
 var mapObjectReferences = function(string) {
-  string = string.replace(/\[mongooseSchema.ObjectId\]/, '"ObjectIdArray"');  
+  string = string.replace(/\[mongooseSchema.ObjectId\]/, '"ObjectIdArray"');
   string = string.replace(/mongooseSchema.ObjectId/, '"ObjectId"');
 
 
