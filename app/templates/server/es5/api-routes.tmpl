@@ -1,10 +1,10 @@
-var brandsApi = rek('{{ collectionNamePlural }}-api');
+var {{ collectionNamePlural }}Api = rek('{{ collectionNamePlural }}-api');
 
 
 var addRoutes = function(app) {
 
   app.router.get('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
-    brandsApi.get(req.params.id)
+    {{ collectionNamePlural }}Api.get(req.params.id)
     .then(function(data) {
       res.json(data);
     })
@@ -14,7 +14,7 @@ var addRoutes = function(app) {
   });
 
   app.router.put('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
-    brandsApi.put(req.params.id, req.body)
+    {{ collectionNamePlural }}Api.put(req.params.id, req.body)
       .then(function(data) {
         res.json(data);
       })
@@ -24,7 +24,7 @@ var addRoutes = function(app) {
   });
 
   app.router.post('/api/{{ collectionNamePlural }}/', function(req, res, next) {
-    brandsApi.post(req.body)
+    {{ collectionNamePlural }}Api.post(req.body)
       .then(function(data) {
         res.json(data);
       })
@@ -34,7 +34,7 @@ var addRoutes = function(app) {
   });
 
   app.router.post('/api/{{ collectionNamePlural }}/query', function(req, res, next) {
-    brandsApi.query(req.body)
+    {{ collectionNamePlural }}Api.query(req.body)
       .then(function(data) {
         res.json(data);
       })
@@ -44,7 +44,7 @@ var addRoutes = function(app) {
   });
 
   app.router.delete('/api/{{ collectionNamePlural }}/:id', function(req, res, next) {
-    brandsApi.delete(req.params.id, req.body)
+    {{ collectionNamePlural }}Api.delete(req.params.id, req.body)
       .then(function(data) {
         res.json(data);
       })
