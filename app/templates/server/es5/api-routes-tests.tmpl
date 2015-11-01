@@ -35,6 +35,13 @@ var runTests = function(expressApp) {
     var testDataIndex = 0;
     var lastUpdatedPropertyValue = null;
 
+    var handleError = function(error) {
+      console.log('HANDLE ERROR:');
+      console.log(error);
+
+      throw error;
+    }
+
     beforeEach(function (done) {
       testSetup.clearDb(mongoose, done);
       {{ collectionNamePlural }} = [];
@@ -77,8 +84,10 @@ var runTests = function(expressApp) {
             // capture new entity for asserts later
             {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
             done();
-          });
-      });
+          })
+          .catch(handleError);
+      })
+      .catch(handleError);
     }
 
     beforeEach(function(done) {
@@ -88,7 +97,8 @@ var runTests = function(expressApp) {
           jwt = newUserResponse.token;
 
           createTestData(done);
-        });
+        })
+        .catch(handleError);
     });
 
     afterEach(function (done) {

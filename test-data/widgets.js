@@ -2,18 +2,29 @@ var mongoose     = require('mongoose');
 var mongooseSchema       = mongoose.Schema;
 
 var schema  =  {
-    // core profile (required fields)  // unique to a campaign ?
-    title: { type: String, required: true },
-    brandId: { type: mongooseSchema.ObjectId, ref: 'campaigns', required: true },
-    type: { type: String },
-     // this could be a filename, url, contentId from some CMS
-    resource: { type: String },
+  // owning user
+  userId: { type: mongooseSchema.ObjectId, ref: 'users' },
 
-    // meta-data
-    dateCreated: { type: Date },
+  // the actual instance of a credit ie: provided gender
+  creditId: { type: mongooseSchema.ObjectId },
 
-    // audit trail for admin who updated
-    adminId: { type: [mongooseSchema.ObjectId], ref: "media" },
-}
+  // the actual instance of an incentive ie: 1 Month Free Spotify
+  incentiveId: { type: mongooseSchema.ObjectId },
+
+  // the credit value at the time the user realized it
+  creditValue: { type: Number, required: true },
+
+  // credit = true, debit = false
+  isCredit: { type: String, required: true },
+
+  // instant = true, delayed = false
+  isInstant: { type: String, required: true },
+
+  // if the credit is not instant, this is the date the user realizes the credit
+  realizationDate: { type: Date },
+
+  // Meta-Data
+  dateCreated: { type: Date }
+};
 
 module.exports = schema;

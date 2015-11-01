@@ -30,9 +30,9 @@ var doubleQuoteMongoTypes = function(string) {
 };
 
 var mapObjectReferences = function(string) {
-  string = string.replace(/\[mongooseSchema.ObjectId\]/, '"ObjectIdArray"');
-  string = string.replace(/mongooseSchema.ObjectId/, '"ObjectId"');
-
+  // match the array of objectId's first so it doesn't match the one below
+  string = string.replace(/\[mongooseSchema.ObjectId\]/g, '"ObjectIdArray"');
+  string = string.replace(/mongooseSchema.ObjectId/g, '"ObjectId"');
 
   return string;
 }
@@ -61,7 +61,11 @@ var stripLines = function(data) {
   // wrap mongo types in qoutes because eval does funky things
   string = doubleQuoteMongoTypes(string);
 
+  // map objectId types to something JSON safe
   string = mapObjectReferences(string);
+
+  // remove trailing semi-colon
+  string = string.substring(0, string.length - 1);
 
   // convert string to JSON
   var jsonModel = eval('(' + string + ')');
