@@ -13,7 +13,13 @@ var action = function(args, resolve, reject) {
     commandState.args.dbName = commandState.args.appName;
   }
 
-   resolve(commandState);
+   if(!reject) {
+     //running through vorpal
+     resolve();
+   } else {
+     // running through mocha
+    resolve(commandState);
+   }
 };
 
 var promise = function(args) {

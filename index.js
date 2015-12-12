@@ -18,7 +18,7 @@ var initServer = require('./app/commands/init/server.js');
 
 vorpal
   .command('init-server [appName] [dbName]', 'Creates Node Server')
-  .action(initServer);
+  .action(initServer.action);
 
 // SERVER COMMANDS
 var apiCommand = require('./app/commands/server/api/api.js');
@@ -29,5 +29,5 @@ vorpal
   .action(apiCommand);
 
 vorpal
-  .delimiter('boast-cli$')
+  .delimiter('boast$')
   .show();
