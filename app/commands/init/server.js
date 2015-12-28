@@ -1,12 +1,34 @@
 var rek = require('rekuire');
 var Promise = require('bluebird');
-var boastResolve = rek('boast-resolve');
-var boastShell = rek('boast-shell');
+var Hogan = require('hogan.js');
+var fs = require('fs');
 var Task = require('shell-task');
 var R = require('ramda');
 
-// official stateKeeper for this command
-var commandState = {};
+var boastResolve = rek('boast-resolve');
+var boastShell = rek('boast-shell');
+var boastInquirer = rek('boast-inquirer');
+var boastConfig = rek('boast-config');
+var templateLoader = rek('boast-load-template');
+
+
+var confirmServerLocation = function(commandState) {
+  var questions = [];
+  var path = process.env.PWD;
+
+  questions.push({
+    type: "confirm",
+    name: "continue",
+    message: "Create a boast-server right here: " +path +" ?",
+    default: false
+  });
+
+  return boastInquirer.prompt(questions)
+          .then(function(answers) {
+            commandState.answers = answers;
+            return commandState;
+          });
+}
 
 var npmInstall = function(commandState) {
   return new Promise(function(resolve, reject) {
@@ -17,9 +39,76 @@ var npmInstall = function(commandState) {
   });
 };
 
-// args from vorpal command, call callback when done to notify vorpal
-var action = function(args, resolve, reject) {
-  // captures reference to args in command stateKeeper
+var packageJson = function(commandState) {
+  return templateLoader.loadTemplate('app/templates/init/server/' +'package.json')
+    .then(function(templateContent) {
+      var template = Hogan.compile(templateContent);
+      var output = template.render(commandState);
+      var filePath = process.env.BOAST_PROJECT_PATH +'/package.json';
+
+      return {
+        filePath: filePath,
+        fileContent: output
+      };
+    })
+    .catch(function(err) {
+      throw err;
+    });
+};
+
+var boastJson = function(commandState) {
+  return templateLoader.loadTemplate('app/templates/init/server/' +'boast.json')
+    .then(function(templateContent) {
+      var template = Hogan.compile(templateContent);
+      var output = template.render(commandState);
+      var filePath = process.env.BOAST_PROJECT_PATH + 'boast.json';
+
+      commandState.boastFileOutputs.push({
+        filePath: filePath,
+        fileContent: output
+      });
+
+      resolve(commandState)
+    })
+    .catch(function(err) {
+      throw err;
+    });
+};
+
+var writeFile = function(boastFileOutput) {
+  fs.writeFile(boastFileOutput.filePath, new Buffer(boastFileOutput.fileContent, 'utf8'), function(err) {
+      if(err) {
+          return console.log(err);
+      }
+
+      console.log("The file was saved!");
+  });
+};
+
+var writeFilesToDisk = function(commandState) {
+  var writeFilePromises = [];
+
+  boastFileOutputs.forEach(function(element) {
+    writeFilePromises.push(writeFile(element));
+  });
+
+  return Promise.all(writeFilePromises)
+          .then(function() {
+            return commandState;
+          });
+};
+
+var writeFiles = function(commandState) {
+  commandState.boastFileOutputs = [];
+
+  return R.composeP(packageJson)(commandState);
+};
+
+var initializeState = function(args) {
+  // official stateKeeper for this command lifecycle
+  var commandState = {};
+
+  // capture reference to args
   commandState.args = args;
 
   // default dbName to appName
@@ -27,18 +116,57 @@ var action = function(args, resolve, reject) {
     commandState.args.dbName = commandState.args.appName;
   }
 
-  var f = R.composeP(resolve, npmInstall);
+  return commandState;
+};
 
-  f(commandState);
+var loadBoastConfig = function(commandState) {
+  return boastConfig.loadConfig()
+          .then(function(boastConfig) {
+            // check for an api config section
+            if(boastConfig && !!boastConfig.api) {
+              boastConfig.api = {};
+              boastConfig.api.language = 'es5';
+            }
+
+            commandState.templatePath = 'app/templates/init/server/' +boastConfig.api.language +'/';
+            commandState.boastConfig = boastConfig;
+
+            return commandState;
+          });
+};
+
+// args from vorpal command, call callback when done to notify vorpal
+var command = function(args, resolve, reject) {
+  var commandState = initializeState(args);
+
+  // Lets confirm with the user they want to use this path
+  confirmServerLocation(commandState)
+    .then(function(commandState) {
+      if(commandState.answers.continue) {
+        // execute promise chain R to L <=== (data)
+        R.composeP(resolve, npmInstall, writeFiles, loadBoastConfig)(commandState);
+      } else {
+        // exit and return, user is aborting
+        resolve(commandState);
+      }
+    });
 };
 
 var promise = function(args) {
   return new Promise(function(resolve, reject) {
-    var callback = boastResolve.makeResolver(resolve, reject);
+    // let boast-resolve figure out if we are running through vorpal or mocha
+    resolve = boastResolve.makeResolver(resolve, reject);
 
-    action(args, callback, reject);
+    command(args, resolve, reject);
   });
 }
 
-module.exports.action = action;
+var action = function(args, vorpalCallback) {
+  // let boast-resolve figure out if we are running through vorpal or mocha
+  var resolve = boastResolve.makeResolver(vorpalCallback, null);
+
+  command(args, resolve);
+};
+
 module.exports.promise = promise;
+module.exports.action = action;

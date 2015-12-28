@@ -15,6 +15,7 @@ var apiCommand = rek('api.js');
 
 // require so we can stub
 var boastShell = rek('boast-shell');
+var boastInquirer = rek("boast-inquirer");
 
 
 describe('api command',function() {
@@ -51,11 +52,20 @@ var initServer = rek('server.js');
 
 describe('server command',function() {
   var commandStub;
+  //var promptStub;
 
   beforeEach(function() {
     commandStub = sinon.stub(boastShell, 'command', function() {
       return new Promise(function(resolve, reject) {
         resolve();
+      });
+    });
+
+    promptStub = sinon.stub(boastInquirer, 'prompt', function() {
+      return new Promise(function(resolve, reject) {
+        resolve({
+          continue: true,
+        });
       });
     });
   });

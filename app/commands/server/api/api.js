@@ -6,7 +6,7 @@ var templateLoader = rek('boast-load-template');
 var mongooseLoader = rek('boast-load-mongoose-schema');
 var utf8 = require('utf8');
 
-// we don't initialize these vars until the commman is actually called
+// we don't initialize these vars until the commmand is actually called
 var boastConfig;
 var templatePath;
 

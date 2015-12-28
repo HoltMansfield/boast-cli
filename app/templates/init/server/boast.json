@@ -7,17 +7,8 @@
       "apiModulesPath": "server/data/api/"
     }
   },
-  "angular": {
-    "language": "es5",
-    "paths": {
-        "dataServices": "www/js/core/data/"
-      },
-      "modules": {
-        "dataServices": "pio.core.data"
-      }
-  },
   "mongoose": {
-    "modelsPath": "/Users/holt/work/boast-cli/test-data/"
+    "modelsPath": "server/data/collections"
   },
   "build": {
     "tool": "gulp"
