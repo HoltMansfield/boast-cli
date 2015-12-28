@@ -48,11 +48,11 @@ describe('dataService command',function() {
   });
 });
 
-var initServer = rek('server.js');
+var initServerCommand = rek('server.js');
 
-describe('server command',function() {
+describe('initServer command',function() {
   var commandStub;
-  //var promptStub;
+  var promptStub;
 
   beforeEach(function() {
     commandStub = sinon.stub(boastShell, 'command', function() {
@@ -76,7 +76,7 @@ describe('server command',function() {
       "appName": "stopDWB"
     };
 
-    initServer.promise(arguments)
+    initServerCommand.promise(arguments)
       .then(function(result) {
         expect(result.dbName).to.equal(arguments.appName);
         expect(commandStub).to.have.been.calledWith('npm i');
