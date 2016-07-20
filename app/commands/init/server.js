@@ -40,12 +40,24 @@ var npmInstall = function(commandState) {
 };
 
 var packageJson = function(commandState) {
+/*
+toDoLoo:
+check for existing package.json, merge in everything but the deps
+*/
+
   return templateLoader.loadTemplate('app/templates/init/server/' +'package.json')
     .then(function(templateContent) {
       var template = Hogan.compile(templateContent);
       var output = template.render(commandState);
       var filePath = process.env.BOAST_PROJECT_PATH +'/package.json';
 
+      /* toDoLoo: commandState.boastFileOutputs.push({
+        filePath: filePath,
+        fileContent: output
+      });
+
+      return commandState;
+*/
       return {
         filePath: filePath,
         fileContent: output
@@ -101,6 +113,12 @@ var writeFilesToDisk = function(commandState) {
 var writeFiles = function(commandState) {
   commandState.boastFileOutputs = [];
 
+  /*
+toDoLoo:
+call writeFilesToDisk as last in this chain
+
+  */
+
   return R.composeP(packageJson)(commandState);
 };
 
@@ -122,12 +140,15 @@ var initializeState = function(args) {
 var loadBoastConfig = function(commandState) {
   return boastConfig.loadConfig()
           .then(function(boastConfig) {
+
             // check for an api config section
             if(boastConfig && !!boastConfig.api) {
+              // if boast config not found set defaults
               boastConfig.api = {};
               boastConfig.api.language = 'es5';
             }
 
+            // configure our commandState
             commandState.templatePath = 'app/templates/init/server/' +boastConfig.api.language +'/';
             commandState.boastConfig = boastConfig;
 
