@@ -21,12 +21,18 @@ var Promise = require('bluebird');
 // };
 
 var doubleQuoteMongoTypes = function(string) {
-  string = string.replace(/String/,'"String"');
-  string = string.replace(/Number/,'"Number"');
-  string = string.replace(/^Date$/,'"Date"');
-  string = string.replace(/Boolean/,'"Boolean"');
+  string = string.replace(/String/g,'"String"');
+  string = string.replace(/Number/g,'"Number"');
 
-   return string;
+  // double quote all occurrences of Date
+  string = string.replace(/Date/g,'"Date"');
+
+  // the regex above will incorrectly map Date.now to "Date".now, so here we repair that
+  string = string.replace(/"Date".now/g,'"Date.now"'); // this becomes a special token that will be checked for downstream
+
+  string = string.replace(/Boolean/g,'"Boolean"');
+
+  return string;
 };
 
 var mapObjectReferences = function(string) {
@@ -37,7 +43,7 @@ var mapObjectReferences = function(string) {
   return string;
 }
 
-var stripLines = function(data) {
+var stripLines = function(resolve, reject, data) {
   // if windows
   // var cleanData = data.replace(/\r/,'');
   // var lines = data.split('\r');
@@ -67,13 +73,25 @@ var stripLines = function(data) {
   // remove trailing semi-colon
   string = string.substring(0, string.length - 1);
 
+  // add the trailing brace for the JSON dictionary we are building up
+  string += '}';
+
+  var jsonModel;
+
   // convert string to JSON
-  var jsonModel = eval('(' + string + ')');
+  try {
+    jsonModel = eval('(' + string + ')');
+  } catch(e) {
+    console.log('boast-load-mongoose-schema EVAL failed', e);
+    console.log(string);
+
+    reject(e);
+  };
 
   return jsonModel;
 }
 
-var addRequiredFields = function(schema) {
+var addRequiredFields = function(resolve, reject, schema) {
   var requiredFields = [];
   var requiredFieldNames = [];
   var testField;
@@ -93,7 +111,7 @@ var addRequiredFields = function(schema) {
   schema.testField = testField;
 };
 
-var addTestField = function(schema) {
+var addTestField = function(resolve, reject, schema) {
   var testField;
 
   if(schema.requiredFieldNames) {
@@ -115,12 +133,13 @@ var readSchema = function(resolve, reject, path, modelName) {
 
   fs.readFile(fullpath, 'utf8', function (err,data) {
     if (err) {
-        reject(err);
+      reject(err);
     }
 
-    var schema = stripLines(data);
-    addRequiredFields(schema);
-    addTestField(schema);
+    var schema = stripLines(resolve, reject, data);
+
+    addRequiredFields(resolve, reject, schema);
+    addTestField(resolve, reject, schema);
 
     resolve(schema);
   });

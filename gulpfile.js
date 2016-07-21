@@ -3,7 +3,7 @@ var shell   = require('gulp-shell');
 var nodemon = require('gulp-nodemon');
 
 // run mocha tests
-gulp.task('t', shell.task(['mocha "tests/**/*.js" --reporter spec']));
+gulp.task('t', shell.task(['']));
 
 // DEBUG mocha tests
-gulp.task('td', shell.task(['mocha "tests/**/*.js"  --debug-brk --reporter spec']));
+gulp.task('td', shell.task(['']));

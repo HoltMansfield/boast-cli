@@ -175,5 +175,8 @@ module.exports = function(args, callback) {
       if(args.options.language) boastConfig.language = args.options.language;
 
       return runCommand(args, callback);
+    })
+    .catch(function(err) {
+      console.log('mongooseLoader.readSchema', err);
     });
 };
