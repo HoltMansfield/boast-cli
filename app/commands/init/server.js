@@ -189,5 +189,7 @@ var action = function(args, vorpalCallback) {
   command(args, resolve);
 };
 
-module.exports.promise = promise;
-module.exports.action = action;
+module.exports = {
+  promise: promise,
+  action: action
+};
