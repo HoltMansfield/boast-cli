@@ -10,6 +10,7 @@ var boastShell = rek('boast-shell');
 var boastInquirer = rek('boast-inquirer');
 var boastConfig = rek('boast-config');
 var templateLoader = rek('boast-load-template');
+var boastIO = rek('boast-io');
 
 
 var confirmServerLocation = function(commandState) {
@@ -40,68 +41,38 @@ var npmInstall = function(commandState) {
 };
 
 var packageJson = function(commandState) {
-/*
-toDoLoo:
-check for existing package.json, merge in everything but the deps
-*/
+  var fileName = 'package.json';
+  var templatePath = 'app/templates/init/server/' +fileName;
 
-  return templateLoader.loadTemplate('app/templates/init/server/' +'package.json')
-    .then(function(templateContent) {
-      var template = Hogan.compile(templateContent);
-      var output = template.render(commandState);
-      var filePath = process.env.BOAST_PROJECT_PATH +'/package.json';
-
-      /* toDoLoo: commandState.boastFileOutputs.push({
-        filePath: filePath,
-        fileContent: output
-      });
-
-      return commandState;
-*/
-      return {
-        filePath: filePath,
-        fileContent: output
-      };
-    })
-    .catch(function(err) {
-      throw err;
-    });
+  return templateLoader.processTemplate(templatePath, fileName, commandState);
 };
 
 var boastJson = function(commandState) {
-  return templateLoader.loadTemplate('app/templates/init/server/' +'boast.json')
-    .then(function(templateContent) {
-      var template = Hogan.compile(templateContent);
-      var output = template.render(commandState);
-      var filePath = process.env.BOAST_PROJECT_PATH + 'boast.json';
+  var fileName = 'boast.json';
+  var templatePath = 'app/templates/init/server/' +fileName;
 
-      commandState.boastFileOutputs.push({
-        filePath: filePath,
-        fileContent: output
-      });
-
-      resolve(commandState)
-    })
-    .catch(function(err) {
-      throw err;
-    });
+  return templateLoader.processTemplate(templatePath, fileName, commandState);
 };
 
-var writeFile = function(boastFileOutput) {
-  fs.writeFile(boastFileOutput.filePath, new Buffer(boastFileOutput.fileContent, 'utf8'), function(err) {
-      if(err) {
-          return console.log(err);
-      }
+var writeFile = function(boastFileOutput, commandState) {
+  var path = boastFileOutput.filePath;
 
-      console.log("The file was saved!");
-  });
+  if(commandState.args.ENV = 'test') {
+    path = process.env.BOAST_CLI_PATH + '/test-output/init/server';
+  }
+
+  return boastIO.writeFile(path, boastFileOutput.fileContent);
 };
 
 var writeFilesToDisk = function(commandState) {
   var writeFilePromises = [];
 
-  boastFileOutputs.forEach(function(element) {
-    writeFilePromises.push(writeFile(element));
+  if(commandState.args.ENV = 'test') {
+    path = process.env.BOAST_CLI_PATH + '/test-output/init/server';
+  }
+
+  commandState.boastFileOutputs.forEach(function(element) {
+    writeFilePromises.push(boastIO.writeFile(element.filePath, element.fileContent, commandState));
   });
 
   return Promise.all(writeFilePromises)
@@ -113,13 +84,7 @@ var writeFilesToDisk = function(commandState) {
 var writeFiles = function(commandState) {
   commandState.boastFileOutputs = [];
 
-  /*
-toDoLoo:
-call writeFilesToDisk as last in this chain
-
-  */
-
-  return R.composeP(packageJson)(commandState);
+  return R.composeP(writeFilesToDisk,packageJson, boastJson)(commandState);
 };
 
 var initializeState = function(args) {
@@ -129,6 +94,12 @@ var initializeState = function(args) {
   // capture reference to args
   commandState.args = args;
 
+  boastConfig.api = {
+    language: 'es5' // default to es5, allow override from CLI
+  };
+
+  commandState.templatePath = 'app/templates/init/server/' +boastConfig.api.language +'/';
+
   // default dbName to appName
   if(!commandState.args.dbName) {
     commandState.args.dbName = commandState.args.appName;
@@ -137,24 +108,24 @@ var initializeState = function(args) {
   return commandState;
 };
 
-var loadBoastConfig = function(commandState) {
-  return boastConfig.loadConfig()
-          .then(function(boastConfig) {
-
-            // check for an api config section
-            if(boastConfig && !!boastConfig.api) {
-              // if boast config not found set defaults
-              boastConfig.api = {};
-              boastConfig.api.language = 'es5';
-            }
-
-            // configure our commandState
-            commandState.templatePath = 'app/templates/init/server/' +boastConfig.api.language +'/';
-            commandState.boastConfig = boastConfig;
-
-            return commandState;
-          });
-};
+// var loadBoastConfig = function(commandState) {
+//   return boastConfig.loadConfig()
+//           .then(function(boastConfig) {
+//
+//             // check for an api config section
+//             if(boastConfig && !!boastConfig.api) {
+//               // if boast config not found set defaults
+//               boastConfig.api = {};
+//               boastConfig.api.language = 'es5';
+//             }
+//
+//             // configure our commandState
+//             commandState.templatePath = 'app/templates/init/server/' +boastConfig.api.language +'/';
+//             commandState.boastConfig = boastConfig;
+//
+//             return commandState;
+//           });
+// };
 
 // args from vorpal command, call callback when done to notify vorpal
 var command = function(args, resolve, reject) {
@@ -165,7 +136,7 @@ var command = function(args, resolve, reject) {
     .then(function(commandState) {
       if(commandState.answers.continue) {
         // execute promise chain R to L <=== (data)
-        R.composeP(resolve, npmInstall, writeFiles, loadBoastConfig)(commandState);
+        R.composeP(resolve, npmInstall, writeFiles)(commandState);
       } else {
         // exit and return, user is aborting
         resolve(commandState);
@@ -174,6 +145,8 @@ var command = function(args, resolve, reject) {
 };
 
 var promise = function(args) {
+  args.ENV = 'test';
+
   return new Promise(function(resolve, reject) {
     // let boast-resolve figure out if we are running through vorpal or mocha
     resolve = boastResolve.makeResolver(resolve, reject);
@@ -183,6 +156,8 @@ var promise = function(args) {
 }
 
 var action = function(args, vorpalCallback) {
+  args.ENV = 'CLI';
+
   // let boast-resolve figure out if we are running through vorpal or mocha
   var resolve = boastResolve.makeResolver(vorpalCallback, null);
 

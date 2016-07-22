@@ -16,6 +16,7 @@ var apiCommand = rek('api.js');
 // require so we can stub
 var boastShell = rek('boast-shell');
 var boastInquirer = rek("boast-inquirer");
+var fs = require('fs');
 
 
 describe('api command',function() {
@@ -53,6 +54,7 @@ var initServerCommand = rek('server.js');
 describe('initServer command',function() {
   var commandStub;
   var promptStub;
+  var fsStub;
 
   beforeEach(function() {
     commandStub = sinon.stub(boastShell, 'command', function() {
@@ -68,6 +70,10 @@ describe('initServer command',function() {
         });
       });
     });
+
+    fsStub = sinon.stub(fs, 'writeFile', function(path, bytes, callback) {
+      callback();
+    });
   });
 
   it('should generate 1 file', function(done) {
@@ -80,6 +86,8 @@ describe('initServer command',function() {
       .then(function(result) {
         expect(result.dbName).to.equal(arguments.appName);
         expect(commandStub).to.have.been.calledWith('npm i');
+        sinon.assert.callCount(fsStub, 2);
+
         done();
       })
       .catch(function(err) {
