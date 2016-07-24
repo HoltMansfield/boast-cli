@@ -54,16 +54,6 @@ var boastJson = function(commandState) {
   return templateLoader.processTemplate(templatePath, fileName, commandState);
 };
 
-var writeFile = function(boastFileOutput, commandState) {
-  var path = boastFileOutput.filePath;
-
-  if(commandState.args.ENV = 'test') {
-    path = process.env.BOAST_CLI_PATH + '/test-output/init/server';
-  }
-
-  return boastIO.writeFile(path, boastFileOutput.fileContent);
-};
-
 var writeFilesToDisk = function(commandState) {
   var writeFilePromises = [];
 
