@@ -17,7 +17,7 @@
       }
   },
   "mongoose": {
-    "modelsPath": "/Users/holt/work/boast-cli/test-data/"
+    "modelsPath": "/Users/erikaws/work/boast-cli/test-data"
   },
   "build": {
     "tool": "gulp"

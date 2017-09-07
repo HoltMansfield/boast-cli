@@ -37,32 +37,32 @@ var doubleQuoteMongoTypes = function(string) {
 
 var mapObjectReferences = function(string) {
   // match the array of objectId's first so it doesn't match the one below
-  string = string.replace(/\[mongooseSchema.ObjectId\]/g, '"ObjectIdArray"');
-  string = string.replace(/mongooseSchema.ObjectId/g, '"ObjectId"');
+  string = string.replace(/\[Schema.ObjectId\]/g, '"ObjectIdArray"');
+  string = string.replace(/Schema.ObjectId/g, '"ObjectId"');
 
   return string;
 }
 
 var stripLines = function(resolve, reject, data) {
-  // if windows
-  // var cleanData = data.replace(/\r/,'');
-  // var lines = data.split('\r');
-  //else {
   var lines = data.split('\n');
-  //}
 
-  var json = ['{'];
 
+  var json = [];//['{'];
+
+  // grab each line that isn't a comment and add to array
   for(var i = 4; i < lines.length -2; i++) {
       var comments = '//';
 
       if(lines[i].indexOf(comments) === -1) {
         json.push(lines[i]);
       }
+      //console.log('found line %j' +i, lines[i])
   }
 
   // convert arry to a string
   var string = json.join('');
+
+  //console.log('result string ', string)
 
   // wrap mongo types in qoutes because eval does funky things
   string = doubleQuoteMongoTypes(string);
@@ -87,6 +87,8 @@ var stripLines = function(resolve, reject, data) {
 
     reject(e);
   };
+
+  //console.log('result json %j ', jsonModel)
 
   return jsonModel;
 }
@@ -129,10 +131,11 @@ var addTestField = function(resolve, reject, schema) {
 };
 
 var readSchema = function(resolve, reject, path, modelName) {
-  var fullpath = path + modelName +'.js';
+  var fullpath = `${path}/${modelName}.js`;
 
-  fs.readFile(fullpath, 'utf8', function (err,data) {
+  fs.readFile(fullpath, 'utf8', function (err, data) {
     if (err) {
+      console.log('\n Errror in fs.readFile boast-load-mongoose-schema %j \n', err)
       reject(err);
     }
 
