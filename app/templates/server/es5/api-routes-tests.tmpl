@@ -1,151 +1,88 @@
-var testSetup = require(process.env.PWD + '/tests/test-setup');
+const rek = require('rekuire');
+const chai = require('chai');
+const sinon = require('sinon');
+const consoleMessages = rek('console-messages');
+const request = require('supertest');
+const mongoose = require('mongoose');
 
-// create node environment & instance of expressApp
-var nodeAppPath = testSetup.prepareNodeEnvironment();
+const expect = chai.expect;
+const assert = chai.assert;
 
-var assert = require('assert');
-var request = require('supertest');
-var mongoose = require('mongoose');
-var Promise = require('bluebird');
-var rek = require('rekuire');
-var appMaker = require(nodeAppPath +'/app/app.js');
-var chai = require('chai')
-var expect = chai.expect;
+const createServerOnce = rek('create-server-once');
+const mongoTestSetup = rek('mongo-test-setup');
+const supertestTestSetup = rek('supertest-test-setup');
 
-// used for seed data
-var {{ collectionNamePlural }}Api = rek('{{ collectionNamePlural }}-api');
 
-// used for getting a JWT for hitting secured API calls
-var usersApi = rek('users-api');
-
-describe('Express App', function() {
-  it('should load without errors', function(done) {
-    appMaker.initialize()
-      .then(function(expressApp) {
-        done();
-        runTests(expressApp);
-      });
+describe('express-app', () => {
+  it('should load without errors', done => {
+    // start the app
+    createServerOnce
+        .createServerOnce()
+        .then(server => {
+          expect(server).not.to.be.undefined;
+          done();
+          runTests(server);
+        })
+        .catch(consoleMessages.logToConsole);
   });
 });
 
-var runTests = function(expressApp) {
-  describe('{{ collectionNamePlural }}-api', function() {
-    var {{ collectionNamePlural }};
-    var jwt;
-    var testDataIndex = 0;
-    var lastUpdatedPropertyValue = null;
+const runTests = function(server) {
+  describe('{{ collectionNamePlural }}-routes', () => {
+    const baseUrl = '/api/{{ collectionNamePlural }}';
+    let {{ collectionNamePlural }}; // retain {{ collectionName }} data created in beforeEach
+    let jwt;  // jwt needed for hitting secured endpoints
+    let testDataIndex = 0; // used for creating test data
+    let {{ collectionNamePlural }}Repo; // we can't require in the repo module until the mongoose model is registered
+    let apiUser; // the authenticated user for testing secure endpoints
+    const clearTextPassword = 'clear-text-password-value'; // retain the users password to test logging in
 
-    var handleError = function(error) {
-      console.log('HANDLE ERROR:');
-      console.log(error);
+    beforeEach(done => {
+      mongoTestSetup.clearDb(mongoose)
+        .then(() => {
+          {{ collectionNamePlural }}Repo = rek('{{ collectionNamePlural }}-repo'); // now that collections are imported require in {{ collectionNamePlural }}-repo
+          {{ collectionNamePlural }} = []; //re-initalize and clear our array of {{ collectionNamePlural }}
+          testDataIndex = 0;
+          // create a test {{ collectionName }} for querying against
+          {{ collectionNamePlural }}Repo.create(createTestDocument())
+            .then(new{{ collectionNameCamelCase }} => {
+              {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
 
-      throw error;
-    }
-
-    beforeEach(function (done) {
-      testSetup.clearDb(mongoose, done);
-      {{ collectionNamePlural }} = [];
-      testDataIndex = 0;
-      lastUpdatedPropertyValue = null;
+              // create an API user for hitting secure endpoints
+              createApiUser()
+                .then(done);
+            });
+        });
     });
 
-    var createTestDocument = function() {
-      var testDocument = {};
+    afterEach(function (done) {
+      mongoTestSetup.disconnect(mongoose, done);
+    });
 
-{{{ testDocumentAssignments }}}
+    const createTestDocument = function() {
+      let testDocument = {};
 
-      lastUpdatedPropertyValue = testDocument.{{ testField }};
+      {{{ testDocumentAssignments }}}
 
-      testDataIndex++;
+      testDataIndex++; // increment to keep test data unique on next execution
 
       return testDocument;
     };
 
-    var updateTestDocument = function(testDocument) {
-{{{ testDocumentAssignments }}}
+    const createApiUser = function() {
+      // create a user for authenticating with API
+      return supertestTestSetup.createTestUserAndToken(server)
+        .then(userAndToken => {
+          expect(userAndToken).to.have.property('user');
+          expect(userAndToken).to.have.property('jwt');
 
-      lastUpdatedPropertyValue = testDocument.{{ testField }};
-
-      testDataIndex++;
-
-      return testDocument;
-    }
-
-    var createTestData = function(done) {
-      // create a entity
-      {{ collectionNamePlural }}Api.post(createTestDocument())
-      .then(function(new{{ collectionNameCamelCase }}) {
-        // capture data for asserts later
-        {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
-
-        // create second entity
-        {{ collectionNamePlural }}Api.post(createTestDocument())
-          .then(function(new{{ collectionNameCamelCase }}) {
-            // capture new entity for asserts later
-            {{ collectionNamePlural }}.push(new{{ collectionNameCamelCase }});
-            done();
-          })
-          .catch(handleError);
-      })
-      .catch(handleError);
-    }
-
-    beforeEach(function(done) {
-      // for all tests create a user to get a token
-      usersApi.post({ email: 'h@h.com' , fullName: 'mama', password: '1234' })
-        .then(function(newUserResponse) {
-          jwt = newUserResponse.token;
-
-          createTestData(done);
-        })
-        .catch(handleError);
-    });
-
-    afterEach(function (done) {
-      testSetup.disconnect(mongoose, done);
-    });
-
-    it('should GET a {{ collectionName }} by id', function(done) {
-      request(expressApp)
-        .get('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
-        .set('Authorization', 'Bearer ' +jwt)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end(function(err, res){
-          var {{ collectionName }}FromServer = res.body;
-
-          expect({{ collectionName }}FromServer._id).to.equal({{ collectionNamePlural }}[0].id);
-
-          if (err) {
-            console.log(JSON.stringify(err));
-            throw err;
-          }
-          done();
+          jwt = userAndToken.jwt;
+          apiUser = userAndToken.user;
         });
-    });
-
-    it('should DELETE a {{ collectionName }} by _id', function(done) {
-      request(expressApp)
-        .delete('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
-        .set('Authorization', 'Bearer ' +jwt)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end(function(err, res){
-          if (!err) {
-            {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
-              .then(function({{ collectionName }}) {
-                expect({{ collectionName }}).to.be.null;
-                done();
-              });
-          } else {
-            console.log(JSON.stringify(err));
-            throw err;
-          }
-        });
-    });
+    };
 
     it('should POST a {{ collectionName }}', function(done) {
-      request(expressApp)
+      request(server)
         .post('/api/{{ collectionNamePlural }}')
         .set('Authorization', 'Bearer ' +jwt)
         .send(createTestDocument())
@@ -155,59 +92,91 @@ var runTests = function(expressApp) {
           var new{{ collectionNameCamelCase }} = res.body;
 
           if (!err) {
-            {{ collectionNamePlural }}Api.get(new{{ collectionNameCamelCase }}._id)
+            {{ collectionNamePlural }}Repo.find({ id: new{{ collectionNameCamelCase }}._id })
               .then(function({{ collectionName }}) {
-                expect({{ collectionName }}).to.be.defined;
+                expect({{ collectionName }}).not.to.be.undefined;
                 done();
               });
           } else {
-            console.log(JSON.stringify(err));
+            consoleMessages.log(JSON.stringify(err));
             throw err;
           }
         });
     });
 
-    it('should PUT a {{ collectionName }}', function(done) {
-      updateTestDocument({{ collectionNamePlural }}[0]);
+    it('should fetch a {{ collectionName }} using a mongo query', done => {
+      const query = {
+          _id: {{ collectionNamePlural }}[0].id
+      };
 
-      request(expressApp)
-        .put('/api/{{ collectionNamePlural }}/' +{{ collectionNamePlural }}[0].id)
+      request(server)
+        .post(baseUrl +'/query')
         .set('Authorization', 'Bearer ' +jwt)
-        .send({{ collectionNamePlural }}[0])
+        .send(query)
         .expect('Content-Type', /json/)
         .expect(200)
-        .end(function(err, res){
-          if (!err) {
-            {{ collectionNamePlural }}Api.get({{ collectionNamePlural }}[0].id)
-              .then(function({{ collectionName }}) {
-                expect({{ collectionName }}.{{ testField }}).to.equal(lastUpdatedPropertyValue);
-                done();
-              });
-          } else {
-            console.log(JSON.stringify(err));
-            throw err;
-          }
-        });
-    });
-
-    it('should fetch  a {{ collectionName }} using a mongo query', function(done) {
-      request(expressApp)
-        .post('/api/{{ collectionNamePlural }}/query')
-        .set('Authorization', 'Bearer ' +jwt)
-        .send({
-          {{ testField }}: {{ collectionNamePlural }}[0].{{ testField }}
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end(function(err, res){
-          var {{ collectionName }}FromServer = res.body[0];
+        .end((err, res) => {
+          const {{ collectionName }}FromServer = res.body[0];
 
           expect({{ collectionName }}FromServer._id).to.equal({{ collectionNamePlural }}[0].id);
 
           if (err) {
-            console.log(JSON.stringify(err));
+            consoleMessages.log(JSON.stringify(err));
             throw err;
           }
+          done();
+        });
+    });
+
+    it('should delete a {{ collectionName }}', done => {
+      const query = {
+          id: {{ collectionNamePlural }}[0]._id
+      };
+
+      request(server)
+        .delete(baseUrl)
+        .set('Authorization', 'Bearer ' +jwt)
+        .send(query)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end((err, res) => {
+          if (err) {
+            consoleMessages.log(JSON.stringify(err));
+            throw err;
+          }
+
+          {{ collectionNamePlural }}Repo.find(query)
+            .then(found{{ collectionNameCamelCase }} => {
+              // assert that the {{ collectionName }} can't be found after deletion
+              expect(found{{ collectionNameCamelCase }}.length).to.equal(0);
+              done();
+            });
+        });
+    });
+
+    it('should update a {{ collectionName }}', done => {
+      const updatedFieldValue = 'updated';
+      const updatePasswordAttempt = {
+          _id: {{ collectionNamePlural }}[0]._id,
+          {{ testField }}: updatedFieldValue
+      };
+
+      request(server)
+        .put(baseUrl)
+        .set('Authorization', 'Bearer ' +jwt)
+        .send(updatePasswordAttempt)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end((err, res) => {
+          if (err) {
+            consoleMessages.log(JSON.stringify(err));
+            throw err;
+          }
+
+          const updated{{ collectionNameCamelCase }} = res.body;
+
+          expect(updated{{ collectionNameCamelCase }}.{{ testField }}).to.equal(updatedFieldValue);
+
           done();
         });
     });

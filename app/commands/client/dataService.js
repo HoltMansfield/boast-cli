@@ -42,7 +42,8 @@ var capitalizeFirstLetter = function(string) {
 var writeFile = function(boastFileOutput) {
   fs.writeFile(boastFileOutput.filePath, boastFileOutput.fileContent, function(err) {
       if(err) {
-        console.log('fs error in createDataService writeFile');
+        console.log('\n*** fs error in createDataService writeFile ***');
+        console.log('err %j \n', err);
         throw err;
       }
 

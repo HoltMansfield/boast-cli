@@ -36,9 +36,12 @@ var doubleQuoteMongoTypes = function(string) {
 };
 
 var mapObjectReferences = function(string) {
+  // what am I actually doing here?  mapping this type to a token that I can use later?
+  // seems like I'm making it possible to eval this later on
+
   // match the array of objectId's first so it doesn't match the one below
-  string = string.replace(/\[Schema.ObjectId\]/g, '"ObjectIdArray"');
-  string = string.replace(/Schema.ObjectId/g, '"ObjectId"');
+  string = string.replace(/\[Schema.Types.ObjectId\]/g, '"ObjectIdArray"');
+  string = string.replace(/Schema.Types.ObjectId/g, '"ObjectId"');
 
   return string;
 }

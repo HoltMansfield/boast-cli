@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 module.exports = new Schema(
   {
     dateCreated: { type: Date, default: Date.now },
-    userId: { type: String, required: true },
-    code: { type: Schema.ObjectId, ref: "participants" }
+    code: { type: String, required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "participants" }
   }
 );

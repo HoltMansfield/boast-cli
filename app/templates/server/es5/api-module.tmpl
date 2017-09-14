@@ -1,57 +1,31 @@
-var mongoose = require('mongoose');
-var Promise = require("bluebird");
-var R = require('ramda');
-var async = require('async');
-var db = require('../mongo-manager');
+const Promise = require('bluebird');
+const rek = require('rekuire');
+const mongoose = require('mongoose');
+const {{ collectionNameCamelCase }} = mongoose.model('{{ collectionNamePlural }}');
 
 
-var get = function(id) {
-  return db.models.{{ collectionNamePlural }}
-           .findOne({ _id: id })
-           .then(function({{ collectionName }}) {
-             return {{ collectionName }};
-           });
+const create = function({{ collectionName }}) {
+  let {{ collectionName }}Model = new {{ collectionNameCamelCase }}({{ collectionName }});
+
+  return {{ collectionName }}Model.save();
 };
 
-var put = function(id, {{ collectionName }}) {
-  var upsertData = R.clone({{ collectionName }});
-  delete upsertData._id;
-
-  return db.models.{{ collectionNamePlural }}
-           .updateAsync({_id: id}, upsertData, {upsert: true})
-           .then(function({{ collectionName }}) {
-             return 'success';
-           });
+const find = function(query) {
+  return {{ collectionNameCamelCase }}.find(query);
 };
 
-var post = function({{ collectionName }}) {
-  var {{ collectionName }}Model = new db.models.{{ collectionNamePlural }}({{ collectionName }});
-
-  return {{ collectionName }}Model.saveAsync()
-    // We need to use `spread` because `model.save` yields an array
-    .spread(function(new{{ collectionNameCamelCase }}) {
-      return new{{ collectionNameCamelCase }};
-    });
+const update = function({{ collectionName }}) {
+  // { new: true } will return the updated document
+  return {{ collectionNameCamelCase }}.findByIdAndUpdate({{ collectionName }}._id, {{ collectionName }}, { new: true });
 };
 
-var query = function(query) {
-  return db.models.{{ collectionNamePlural }}
-           .find(query)
-           .then(function({{ collectionName }}) {
-             return {{ collectionName }};
-           });
+const deleteDocument = function(query) {
+  return {{ collectionNameCamelCase }}.remove(query);
 };
 
-var d = function(id, user) {
-  return db.models.{{ collectionNamePlural }}
-           .findOne({ _id: id })
-           .then(function({{ collectionName }}) {
-             return {{ collectionName }}.remove();
-           });
+module.exports = {
+  create,
+  find,
+  update,
+  delete: deleteDocument
 };
-
-module.exports.get = get;
-module.exports.put = put;
-module.exports.post = post;
-module.exports.query = query;
-module.exports.delete = d;

@@ -17,7 +17,7 @@ var createApiRoutesTests = function(args) {
       var output = template.render(args);
       var filePath = process.env.BOAST_PROJECT_PATH
                      +boastConfig.api.paths.routesTestsPath
-                     +args.collectionNamePlural +'-routes-tests.js';
+                     +args.collectionNamePlural +'-routes.e2e.tests.js';
 
       return {
         filePath: filePath,
@@ -36,7 +36,7 @@ var createApiModule = function(args) {
       var output = template.render(args);
       var filePath = process.env.BOAST_PROJECT_PATH
                     +boastConfig.api.paths.apiModulesPath
-                    +args.collectionNamePlural +'-api.js';
+                    +args.collectionNamePlural +'-repo.js';
 
       return {
         filePath: filePath,
